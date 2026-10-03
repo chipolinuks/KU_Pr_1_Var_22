@@ -50,3 +50,26 @@ class Shell:
     def is_running(self):
         """Проверить, работает ли оболочка"""
         return self.running
+
+    def run_script(self, file_path):
+        """Выполнить команды из стартового скрипта"""
+        results = []
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                for line in file:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    command, args, error = self.parse_command(line)
+                    if error is not None:
+                        results.append((line, error))
+                        continue
+                    if command is None:
+                        continue
+                    result = self.execute(command, args)
+                    results.append((line, result))
+        except FileNotFoundError:
+            results.append(("", f"Ошибка: файл скрипта '{file_path}' не найден"))
+        except Exception as e:
+            results.append(("", f"Ошибка чтения скрипта: {e}"))
+        return results

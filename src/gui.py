@@ -1,25 +1,37 @@
 """Модуль графического интерфейса эмулятора"""
 
 import tkinter as tk
+
 from src.shell import Shell
 
 
 class ShellGUI:
     """Класс графического интерфейса оболочки"""
 
-    def __init__(self):
+    def __init__(self, vfs_name="VFS", vfs_path=None, script_path=None):
         """Инициализация GUI"""
         self.root = tk.Tk()
-        self.root.title(f"Эмулятор - VFS")
+        self.root.title(f"Эмулятор - {vfs_name}")
         self.root.geometry("700x500")
         self.root.minsize(500, 400)
 
         self.shell = Shell()
 
-        self.output_frame = tk.Frame(
-            self.root,
-            bg="white"
-        )
+        self._create_widgets()
+
+        self._append_output("=== Отладочная информация ===")
+        vfs_info = vfs_path if vfs_path else "не задан"
+        self._append_output(f"Путь к VFS: {vfs_info}")
+        script_info = script_path if script_path else "не задан"
+        self._append_output(f"Путь к скрипту: {script_info}")
+        self._append_output("=============================")
+
+        if script_path:
+            self._run_startup_script(script_path)
+
+    def _create_widgets(self):
+        """Создаёт элементы интерфейса"""
+        self.output_frame = tk.Frame(self.root, bg="white")
         self.output_frame.pack(
             fill=tk.BOTH,
             expand=True,
@@ -27,7 +39,6 @@ class ShellGUI:
             pady=10
         )
 
-        #Текстовое поле для вывода
         self.output_text = tk.Text(
             self.output_frame,
             state=tk.DISABLED,
@@ -50,7 +61,6 @@ class ShellGUI:
             expand=True
         )
 
-        #Фрейм для ввода
         self.input_frame = tk.Frame(self.root)
         self.input_frame.pack(
             fill=tk.X,
@@ -58,7 +68,6 @@ class ShellGUI:
             pady=(0, 10)
         )
 
-        #Метка приглашения
         self.prompt_label = tk.Label(
             self.input_frame,
             text="$ ",
@@ -67,7 +76,6 @@ class ShellGUI:
         )
         self.prompt_label.pack(side=tk.LEFT)
 
-        #Поле ввода
         self.input_entry = tk.Entry(
             self.input_frame,
             font=("Consolas", 10),
@@ -81,11 +89,20 @@ class ShellGUI:
             padx=(5, 0)
         )
         self.input_entry.bind("<Return>", self._on_enter)
-        self.input_entry.focus_set()
+        self.root.after(100, self.input_entry.focus_set)
+
+    def _run_startup_script(self, script_path):
+        """Выполнить стартовый скрипт и вывести результаты в GUI"""
+        self._append_output(f"\n--- Запуск скрипта: {script_path} ---")
+        results = self.shell.run_script(script_path)
+        for line, result in results:
+            self._append_output(f"$ {line}")
+            self._append_output(result)
+            self.root.update()
+        self._append_output("--- Скрипт завершен ---\n")
 
     def _on_enter(self, event):
         """Обработать нажатие Enter"""
-
         line = self.input_entry.get()
         self.input_entry.delete(0, tk.END)
         self._append_output(f"$ {line}")

@@ -1,0 +1,4 @@
+ls -la
+cd "my folder"
+invalid_command
+exit
