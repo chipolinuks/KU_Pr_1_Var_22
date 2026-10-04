@@ -26,6 +26,9 @@ class Shell:
         self.commands = {
             "ls": self.cmd_ls,
             "cd": self.cmd_cd,
+            "head": self.cmd_head,
+            "tac": self.cmd_tac,
+            "rev": self.cmd_rev,
             "exit": self.cmd_exit,
         }
 
@@ -49,38 +52,82 @@ class Shell:
         return f"Ошибка: неизвестная команда '{command}'"
 
     def cmd_ls(self, args):
-        """Команда ls — список содержимого директории"""
-        path = args[0] if args else self.vfs.current_path
-        items = self.vfs.list_directory(path)
-        if items is None:
-            return f"Ошибка: путь '{path}' не найден или не является директорией"
-        if not items:
-            return f"Директория '{path}' пуста"
-        return "\n".join(items)
+        """Вывести содержимое директории"""
+        target = args[0] if args else self.vfs.current_path
+        resolved = self.vfs.resolve_path(target)
+        node = self.vfs.get_node(resolved)
+
+        if node is None:
+            return f"ls: cannot access '{target}': No such file or directory"
+        if node["type"] != "directory":
+            return f"ls: cannot access '{target}': Not a directory"
+
+        children = node.get("children", {})
+        if not children:
+            return ""
+        return "  ".join(sorted(children.keys()))
 
     def cmd_cd(self, args):
-        """Команда cd — смена текущей директории"""
+        """Сменить текущую директорию"""
         if not args:
             self.vfs.current_path = "/"
-            return "Переход в корневую директорию"
+            return ""
 
         target = args[0]
-        if target.startswith("/"):
-            new_path = target
-        else:
-            if self.vfs.current_path == "/":
-                new_path = f"/{target}"
-            else:
-                new_path = f"{self.vfs.current_path}/{target}"
+        resolved = self.vfs.resolve_path(target)
+        node = self.vfs.get_node(resolved)
 
-        node = self.vfs.get_node(new_path)
         if node is None:
-            return f"Ошибка: директория '{target}' не найдена"
+            return f"cd: no such file or directory: {target}"
         if node["type"] != "directory":
-            return f"Ошибка: '{target}' не является директорией"
+            return f"cd: not a directory: {target}"
 
-        self.vfs.current_path = new_path
-        return f"Переход в '{new_path}'"
+        self.vfs.current_path = resolved
+        return ""
+
+    def cmd_head(self, args):
+        """Вывести первые 10 строк файла"""
+        if not args:
+            return "head: missing file operand"
+
+        content, error = self.vfs.get_file_content(self.vfs.resolve_path(args[0]))
+        if error:
+            return f"head: {error}"
+
+        lines = content.split("\n")
+        if lines and lines[-1] == "":
+            lines = lines[:-1]
+        return "\n".join(lines[:10])
+
+    def cmd_tac(self, args):
+        """Вывести содержимое файла в обратном порядке строк"""
+        if not args:
+            return "tac: missing file operand"
+
+        content, error = self.vfs.get_file_content(self.vfs.resolve_path(args[0]))
+        if error:
+            return f"tac: {error}"
+
+        lines = content.split("\n")
+        if lines and lines[-1] == "":
+            lines = lines[:-1]
+        return "\n".join(reversed(lines))
+
+    def cmd_rev(self, args):
+        """Вывести содержимое файла с обратным порядком символов в строках"""
+        if not args:
+            return "rev: missing file operand"
+
+        content, error = self.vfs.get_file_content(self.vfs.resolve_path(args[0]))
+        if error:
+            return f"rev: {error}"
+
+        lines = content.split("\n")
+        if lines and lines[-1] == "":
+            lines = lines[:-1]
+
+        reversed_lines = [line[::-1] for line in lines]
+        return "\n".join(reversed_lines)
 
     def cmd_exit(self, args):
         """Команда выхода из оболочки"""

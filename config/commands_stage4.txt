@@ -1,0 +1,12 @@
+ls
+cd home
+ls
+cd user/documents
+head report.txt
+rev report.txt
+tac report.txt
+cd /etc
+head passwd
+cd /nonexistent
+ls
+exit

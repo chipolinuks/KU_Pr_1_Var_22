@@ -17,6 +17,26 @@ class VirtualFileSystem:
         }
         self.current_path = "/"
 
+    def resolve_path(self, path):
+        """Разрешить относительный или абсолютный путь"""
+        if path.startswith("/"):
+            parts = path.strip("/").split("/")
+        else:
+            current_parts = self.current_path.strip("/").split("/")
+            if self.current_path == "/":
+                current_parts = []
+            parts = current_parts + path.strip("/").split("/")
+
+        resolved = []
+        for part in parts:
+            if part == "..":
+                if resolved:
+                    resolved.pop()
+            elif part and part != ".":
+                resolved.append(part)
+
+        return "/" + "/".join(resolved) if resolved else "/"
+
     def load_from_json(self, file_path):
         """Загрузить VFS из JSON-файла"""
         path = Path(file_path)
@@ -57,16 +77,17 @@ class VirtualFileSystem:
             return None
         return list(node["children"].keys())
 
-    def read_file(self, path):
-        """Прочитать содержимое файла"""
+    def get_file_content(self, path):
+        """Получить содержимое файла по пути"""
         node = self.get_node(path)
         if node is None or node["type"] != "file":
-            return None
+            return None, f"файл не найден: {path}"
 
         content = node.get("content", "")
         if node.get("encoding") == "base64":
             try:
-                return base64.b64decode(content)
+                content = base64.b64decode(content).decode("utf-8", errors="replace")
             except Exception:
-                return content
-        return content
+                content = "[binary data]"
+
+        return content, None

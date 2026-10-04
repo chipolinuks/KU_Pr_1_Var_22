@@ -17,7 +17,7 @@
                 "report.txt": {
                   "type": "file",
                   "name": "report.txt",
-                  "content": "Hello, world!"
+                  "content": "Hello, world!\nHow are you?"
                 }
               }
             }
