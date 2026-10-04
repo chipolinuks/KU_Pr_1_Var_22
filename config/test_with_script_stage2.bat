@@ -1,5 +1,5 @@
 @echo off
 chcp 65001 >nul
 echo Тест 2: Запуск со стартовым скриптом
-python -m src.main --script config/commands.txt
+python -m src.main --script config/commands_stage2.txt
 pause

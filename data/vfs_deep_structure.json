@@ -1,0 +1,40 @@
+{
+  "type": "directory",
+  "name": "/",
+  "children": {
+    "home": {
+      "type": "directory",
+      "name": "home",
+      "children": {
+        "user": {
+          "type": "directory",
+          "name": "user",
+          "children": {
+            "documents": {
+              "type": "directory",
+              "name": "documents",
+              "children": {
+                "report.txt": {
+                  "type": "file",
+                  "name": "report.txt",
+                  "content": "Hello, world!"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "etc": {
+      "type": "directory",
+      "name": "etc",
+      "children": {
+        "passwd": {
+          "type": "file",
+          "name": "passwd",
+          "content": "Привет, мир!"
+        }
+      }
+    }
+  }
+}

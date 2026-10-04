@@ -1,14 +1,28 @@
 """Модуль оболочки эмулятора"""
 
 import shlex
+from src.vfs import VirtualFileSystem
 
 
 class Shell:
     """Класс оболочки эмулятора командной строки"""
 
-    def __init__(self):
-        """Инициализация оболочки"""
+    def __init__(self, vfs_path=None):
+        """Инициализировать оболочку"""
         self.running = True
+        self.vfs = VirtualFileSystem()
+        self.vfs_path = vfs_path
+        self.vfs_load_message = "VFS не загружена: путь не указан"
+
+        if vfs_path:
+            try:
+                self.vfs.load_from_json(vfs_path)
+                self.vfs_load_message = f"VFS успешно загружена из {vfs_path}"
+            except FileNotFoundError as e:
+                self.vfs_load_message = f"Ошибка загрузки VFS: {e}"
+            except ValueError as e:
+                self.vfs_load_message = f"Ошибка загрузки VFS: {e}"
+
         self.commands = {
             "ls": self.cmd_ls,
             "cd": self.cmd_cd,
@@ -35,17 +49,43 @@ class Shell:
         return f"Ошибка: неизвестная команда '{command}'"
 
     def cmd_ls(self, args):
-        """Заглушка команды ls"""
-        return f"ls: {args}"
+        """Команда ls — список содержимого директории"""
+        path = args[0] if args else self.vfs.current_path
+        items = self.vfs.list_directory(path)
+        if items is None:
+            return f"Ошибка: путь '{path}' не найден или не является директорией"
+        if not items:
+            return f"Директория '{path}' пуста"
+        return "\n".join(items)
 
     def cmd_cd(self, args):
-        """Заглушка команды cd"""
-        return f"cd: {args}"
+        """Команда cd — смена текущей директории"""
+        if not args:
+            self.vfs.current_path = "/"
+            return "Переход в корневую директорию"
+
+        target = args[0]
+        if target.startswith("/"):
+            new_path = target
+        else:
+            if self.vfs.current_path == "/":
+                new_path = f"/{target}"
+            else:
+                new_path = f"{self.vfs.current_path}/{target}"
+
+        node = self.vfs.get_node(new_path)
+        if node is None:
+            return f"Ошибка: директория '{target}' не найдена"
+        if node["type"] != "directory":
+            return f"Ошибка: '{target}' не является директорией"
+
+        self.vfs.current_path = new_path
+        return f"Переход в '{new_path}'"
 
     def cmd_exit(self, args):
         """Команда выхода из оболочки"""
         self.running = False
-        return "Выход из эмулятора."
+        return "Выход из эмулятора"
 
     def is_running(self):
         """Проверить, работает ли оболочка"""

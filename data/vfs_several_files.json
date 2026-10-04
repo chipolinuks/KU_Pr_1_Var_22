@@ -1,0 +1,16 @@
+{
+  "type": "directory",
+  "name": "/",
+  "children": {
+    "readme.txt": {
+      "type": "file",
+      "name": "readme.txt",
+      "content": "Документация проекта"
+    },
+    "image.png": {
+      "type": "file",
+      "name": "image.png",
+      "content": "Статистика"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "directory",
+  "name": "/",
+  "children": {
+    "file.txt": {
+      "type": "file",
+      "name": "file.txt",
+      "content": "Минимальный файл"
+    }
+  }
+}
